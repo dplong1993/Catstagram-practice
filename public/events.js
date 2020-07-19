@@ -8,9 +8,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     .addEventListener('click', e => {
       changeCatScore(e.target.innerText.toLowerCase());
     });
-  // document
-  //   .getElementsByClassName('comment-form')[0]
-  //   .addEventListener('')
+  const commentForm = document.getElementsByClassName('comment-form')[0];
+  commentForm.addEventListener('submit', e => {
+      e.preventDefault();
+      let formData = new FormData(commentForm);
+      let comment = formData.get('user-comment');
+      handleSubmission(comment);
+    });
 });
 
 async function getCatImg() {
@@ -20,6 +24,8 @@ async function getCatImg() {
   if(result.ok){
     let data = await result.json();
     updateCatImgEle(data);
+    clearComments();
+    clearScore();
   } else {
     handleError();
   }
@@ -59,4 +65,36 @@ function updatePopularityScore(scoreObj){
 
 function handleError(){
   alert('Something went wrong! Please try again!');
+}
+
+async function handleSubmission(comment) {
+  const res = await fetch('/kitten/comments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({comment})
+  })
+  if(res.ok){
+    const data = await res.json();
+    updateCommentsVisual(data);
+  }
+}
+
+function clearComments(){
+  const commentsHolder = document.querySelector('.comments');
+  commentsHolder.innerHTML = '';
+}
+
+function clearScore(){
+  const scoreEle = document.querySelector('.score');
+  scoreEle.innerText = '0';
+}
+
+function updateCommentsVisual(commentObj){
+  const commentsHolder = document.querySelector('.comments');
+  const comments = commentObj.comments;
+  const comment = document.createElement('div');
+  comment.innerText = comments[comments.length-1];
+  commentsHolder.appendChild(comment);
 }
